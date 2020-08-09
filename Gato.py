@@ -52,7 +52,13 @@ class Juego():
 		if msj_ganador:
 			msj = "Por ende, " + ganador + " ha ganado!"
 			print (msj)
-		input("\nPresiona la tecla Enter para cerrar el programa")
+		
+		seguir_juego = input("\n¿Te gustaría volver a jugar desde cero? (si/no): ")
+		if continuar(seguir_juego):
+			return True
+		else:
+			input("\nPresiona la tecla Enter para cerrar el programa")
+			return False
 
 class Tablero(Juego):
 	def __init__(self):
@@ -118,9 +124,12 @@ class IA(Tablero):
 		msj = "Turno de la IA (" + self.jugador + "), por favor espere"
 		print('\n' + msj)
 		time.sleep(1)
-		
 		#el 5 es una celda que aumenta las posibilidades de la IA de no perder
 		if tablero.valorValido(5) and flow:
+			return 5
+
+		#caso especial, en el que el oponente toma 2 y 4
+		if celdas[2] == celdas[4] == self.enemigo and tablero.valorValido(5):
 			return 5
 
 		##la IA bloqueará al oponente
@@ -152,7 +161,7 @@ class IA(Tablero):
 				casilla = randint(1,9)
 			return casilla
 	
-	def evaluarVictoriaIA(self):
+	def evaluarVictoriaIA(self,tablero):
 		for i in range(1,10):
 			if tablero.valorValido(i):
 				tablero.actualizarTablero(i,self.jugador)
@@ -174,10 +183,9 @@ def setPantalla(tablero,eleccion,jugador):
 	tablero.gato()
 	tablero.actualizarTablero(eleccion,jugador)
 
-def evaluarVictoriaX(tablero,modoDeJuego):
+def evaluarVictoriaX(tablero,modoDeJuego,rondas,lim_rondas):
 	#determina si es que hay una victoria de X
 	if tablero.victoria('X'):
-		#victorias_x += 1
 		tablero.crearTablero()
 		print("\nFelicitaciones X, has ganado esta ronda!")
 		if modoDeJuego == 1 or modoDeJuego == 2:
@@ -204,7 +212,7 @@ def evaluarVictoriaX(tablero,modoDeJuego):
 	else:
 		return False
 
-def evaluarEmpateX(tablero,modoDeJuego):
+def evaluarEmpateX(tablero,modoDeJuego,rondas,lim_rondas):
 	#determinar si es que hay un empate en la partida
 	if tablero.empate():
 		tablero.crearTablero()
@@ -233,7 +241,7 @@ def evaluarEmpateX(tablero,modoDeJuego):
 	else:
 		return False
 
-def inicio_o(reinicio,tablero,flow,modoDeJuego,aiO,humanoO,Obot):
+def inicio_o(reinicio,tablero,flow,modoDeJuego,aiO,humanoO,Obot,ai):
 	if reinicio:
 		tablero.gato()
 	tablero.crearTablero()
@@ -248,7 +256,7 @@ def inicio_o(reinicio,tablero,flow,modoDeJuego,aiO,humanoO,Obot):
 		if aiO:
 			o_eleccion = ai.jugar(tablero,flow)
 			
-			ia_move = ai.evaluarVictoriaIA()
+			ia_move = ai.evaluarVictoriaIA(tablero)
 			
 			if ia_move:
 				o_eleccion = ia_move
@@ -256,13 +264,13 @@ def inicio_o(reinicio,tablero,flow,modoDeJuego,aiO,humanoO,Obot):
 	elif modoDeJuego == 3:
 		o_eleccion = Obot.jugar(tablero,flow)
 			
-		ia_move = Obot.evaluarVictoriaIA()
+		ia_move = Obot.evaluarVictoriaIA(tablero)
 		if ia_move:
 			o_eleccion = ia_move
 	
 	setPantalla(tablero,o_eleccion,'O')
 
-def evaluarEmpateO(tablero,modoDeJuego):
+def evaluarEmpateO(tablero,modoDeJuego,rondas,lim_rondas):
 	#determinar si es que hay un empate en la partida
 	if tablero.empate():
 		tablero.crearTablero()
@@ -291,7 +299,7 @@ def evaluarEmpateO(tablero,modoDeJuego):
 	else:
 		return 'activar Flag'
 
-def evaluarVictoriaO(tablero,modoDeJuego):
+def evaluarVictoriaO(tablero,modoDeJuego,rondas,lim_rondas):
 	#determina si es que hay una victoria de O
 	if tablero.victoria('O'):
 		tablero.crearTablero()
@@ -320,7 +328,7 @@ def evaluarVictoriaO(tablero,modoDeJuego):
 	else:
 		return 'activar Flag'
 
-def menu(tablero):
+def menu():
 	print("\n\nBienvenido a gato!\n\n")
 	print("Modos de juego:\n")
 	print("1) Jugar contra otra persona")
@@ -360,201 +368,217 @@ def evaluarRondas(rondas,lim_rondas):
 		return True
 	return False
 
-tablero = Tablero()
-victorias_x = 0
-victorias_o = 0
-rondas = 0
-flow = False
-aiX = False
-aiO = False
-humanoX = True
-humanoO = True
-Xbot = ''
-Obot = ''
+def Game():
+
+	tablero = Tablero()
+	victorias_x = 0
+	victorias_o = 0
+	rondas = 0
+	flow = True
+	aiX = False
+	aiO = False
+	humanoX = True
+	humanoO = True
+	Xbot = ''
+	Obot = ''
+	ai = ''
 
 
-modoDeJuego,player,lim_rondas = menu(tablero)
-if player == 'X':
-	ai = IA('O')
-	aiO = True
-	humanoO = False
-elif player == 'O':
-	ai = IA('X')
-	aiX = True
-	humanoX = False
+	modoDeJuego,player,lim_rondas = menu()
+	if player == 'X':
+		ai = IA('O')
+		aiO = True
+		humanoO = False
 
-if modoDeJuego == 3:
-	humanoX = False
-	humanoO = False
-	aiX = True
-	aiO = True
-	Xbot = IA('X')
-	Obot = IA('O')
+	elif player == 'O':
+		ai = IA('X')
+		aiX = True
+		humanoX = False
 
-while True and rondas < lim_rondas:
+	if modoDeJuego == 3:
+		humanoX = False
+		humanoO = False
+		aiX = True
+		aiO = True
+		Xbot = IA('X')
+		Obot = IA('O')
 
-	#esta Flag hace que la transición al agregar una O se vea visualmente mejor
-	reinicio = False
-	Flag = False
-	saltar = False
-	revertirFlow = False
-	transicion = True
-	
-	tablero.limpiarPantalla()
-	tablero.gato()
-	tablero.crearTablero()
-	
-	#turno de X
-	if modoDeJuego == 1 or humanoX:
-		x_eleccion = int(input("\nTurno de X, elige una posición del 1 al 9: "))
-		while tablero.valorValido(x_eleccion) == False:
-			print("\nOpción Inválida. Intente de nuevo.")
-			x_eleccion = int(input("Turno de X, elige una posición del 1 al 9: "))
-	
-	elif aiX and modoDeJuego == 2:
-		if rondas % 2 != 0:
-			flow = True
-			revertirFlow = True
+	while True and rondas < lim_rondas:
+
+		#esta Flag hace que la transición al agregar una O se vea visualmente mejor
+		reinicio = False
+		Flag = False
+		saltar = False
+		revertirFlow = False
+		transicion = True
 		
-		x_eleccion = ai.jugar(tablero,flow)
-
-		if revertirFlow:
-			flow = False
+		tablero.limpiarPantalla()
+		tablero.gato()
+		tablero.crearTablero()
+		
+		#turno de X
+		if modoDeJuego == 1 or humanoX:
+			x_eleccion = int(input("\nTurno de X, elige una posición del 1 al 9: "))
+			while tablero.valorValido(x_eleccion) == False:
+				print("\nOpción Inválida. Intente de nuevo.")
+				x_eleccion = int(input("Turno de X, elige una posición del 1 al 9: "))
+		
+		elif aiX and modoDeJuego == 2:
+			if rondas % 2 == 0:
+				flow = False
+				revertirFlow = True
+			else:
+				flow = True
 			
-			ia_move = ai.evaluarVictoriaIA()
+			x_eleccion = ai.jugar(tablero,flow)
+
+			if revertirFlow:
+				flow = True
+
+			ia_move = ai.evaluarVictoriaIA(tablero)
 			if ia_move:
 				x_eleccion = ia_move
 
-	elif modoDeJuego == 3:
-		if rondas % 2 != 0:
-			flow = True
-			revertirFlow = True
-		x_eleccion = Xbot.jugar(tablero,flow)
+		elif modoDeJuego == 3:
+			if rondas % 2 == 0:
+				flow = False
+				revertirFlow = True
+			else:
+				flow = True
+			x_eleccion = Xbot.jugar(tablero,flow)
 
-		if revertirFlow:
-			flow = False
+			if revertirFlow:
+				flow = True
+				
+			ia_move = Xbot.evaluarVictoriaIA(tablero)
 			
-		ia_move = Xbot.evaluarVictoriaIA()
-		if ia_move:
-			x_eleccion = ia_move
-	
-	setPantalla(tablero,x_eleccion,'X')
-	
-	victoriaX = evaluarVictoriaX(tablero,modoDeJuego)
-	
-	#determinar si X ganó la ronda
-	if victoriaX == 'seguir':
-		victorias_x += 1
-		reinicio = True
-		rondas += 1
-		saltar = True
-		if evaluarRondas(rondas,lim_rondas):
-			Flag = True
-	
-	elif victoriaX == 'finalizar':
-		rondas += 1
-		victorias_x += 1
-		break
-	
-	#determinar si es que hay un empate en la partida
-	empateX = evaluarEmpateX(tablero,modoDeJuego)
-
-	if empateX == 'seguir':
-		reinicio = True
-		rondas += 1
-		if evaluarRondas(rondas,lim_rondas):
-			Flag = True
-	elif empateX == 'finalizar':
-		rondas += 1
-		break
-
-	#flow determina quién debe partir en la próxima ronda
-	#saltar permite no repetir el turno de O
-	#si flow = True, parte X, de lo contrario parte O
-	if rondas % 2 == 0:
-		flow = True
-	else:
-		flow = False
-	
-	#turno de O
-	if saltar and flow:
-		pass
-	else:
-		inicio_o(reinicio,tablero,flow,modoDeJuego,aiO,humanoO,Obot)
-
-		#determinar si es que hay un empate en la partida
-		empateO = evaluarEmpateO(tablero,modoDeJuego)
+			if ia_move:
+				x_eleccion = ia_move
 		
-		if empateO == 'seguir':
-			rondas += 1
-			Flag = False
-			transicion = False
-			pass
-
-		elif empateO == 'finalizar':
-			rondas += 1
-			break
-		else:
-			Flag = True
-
-
-		#determina si es que hay una victoria de O
-		victoriaO = evaluarVictoriaO(tablero,modoDeJuego)
-
-		if victoriaO == 'seguir':
-			victorias_o += 1
+		setPantalla(tablero,x_eleccion,'X')
+		
+		victoriaX = evaluarVictoriaX(tablero,modoDeJuego,rondas,lim_rondas)
+		
+		#determinar si X ganó la ronda
+		if victoriaX == 'seguir':
+			victorias_x += 1
 			reinicio = True
-			transicion = False
 			rondas += 1
-			
-			if rondas % 2 != 0:
-				
-			
-				inicio_o(reinicio,tablero,rondas,modoDeJuego,aiO,humanoO,Obot)
-				
-				#determinar si es que hay un empate en la partida
-				empateO = evaluarEmpateO(tablero,modoDeJuego)
-				
-				if empateO == 'seguir':
-					rondas += 1
-					Flag = False
-					transicion = False
-					pass
-
-				elif empateO == 'finalizar':
-					rondas += 1
-					break
-				else:
-					Flag = True
-
-				#determina si es que hay una victoria de O
-				victoriaO = evaluarVictoriaO(tablero,modoDeJuego)
-
-				if victoriaO == 'seguir':
-					victorias_o += 1
-					rondas += 1
-					transicion = False
-					pass
-
-				elif victoriaO == 'finalizar':
-					victorias_o += 1
-					rondas += 1
-					break
-				else:
-					Flag = True
-
-		elif victoriaO == 'finalizar':
-			victorias_o += 1
+			saltar = True
+			if evaluarRondas(rondas,lim_rondas):
+				Flag = True
+		
+		elif victoriaX == 'finalizar':
 			rondas += 1
-			break
+			victorias_x += 1
+			return victorias_x,victorias_o,rondas
+		
+		#determinar si es que hay un empate en la partida
+		empateX = evaluarEmpateX(tablero,modoDeJuego,rondas,lim_rondas)
+
+		if empateX == 'seguir':
+			reinicio = True
+			rondas += 1
+			if evaluarRondas(rondas,lim_rondas):
+				Flag = True
+		elif empateX == 'finalizar':
+			rondas += 1
+			return victorias_x,victorias_o,rondas
+
+		#flow determina quién debe partir en la próxima ronda
+		#saltar permite no repetir el turno de O
+		#si flow = True, parte X, de lo contrario parte O
+		if rondas % 2 == 0:
+			flow = True
 		else:
-			Flag = True
+			flow = False
+		
+		#turno de O
+		if saltar and flow:
+			pass
+		else:
+			inicio_o(reinicio,tablero,flow,modoDeJuego,aiO,humanoO,Obot,ai)
+			
 
-	if evaluarRondas(rondas,lim_rondas):
-		tablero.gato()
-		Flag = True
-	
-	if Flag and transicion:
-		tablero.crearTablero()
-	
-tablero.endGame(victorias_x,victorias_o,rondas)
+			#determinar si es que hay un empate en la partida
+			empateO = evaluarEmpateO(tablero,modoDeJuego,rondas,lim_rondas)
+			
+			if empateO == 'seguir':
+				rondas += 1
+				Flag = False
+				transicion = False
+				pass
+
+			elif empateO == 'finalizar':
+				rondas += 1
+				return victorias_x,victorias_o,rondas
+			else:
+				Flag = True
+
+
+			#determina si es que hay una victoria de O
+			victoriaO = evaluarVictoriaO(tablero,modoDeJuego,rondas,lim_rondas)
+
+			if victoriaO == 'seguir':
+				victorias_o += 1
+				reinicio = True
+				transicion = False
+				rondas += 1
+				
+				if rondas % 2 != 0:
+					flow = False
+					inicio_o(reinicio,tablero,flow,modoDeJuego,aiO,humanoO,Obot,ai)
+					flow = True
+					
+					#determinar si es que hay un empate en la partida
+					empateO = evaluarEmpateO(tablero,modoDeJuego,rondas,lim_rondas)
+					
+					if empateO == 'seguir':
+						rondas += 1
+						Flag = False
+						transicion = False
+						pass
+
+					elif empateO == 'finalizar':
+						rondas += 1
+						return victorias_x,victorias_o,rondas
+					else:
+						Flag = True
+
+					#determina si es que hay una victoria de O
+					victoriaO = evaluarVictoriaO(tablero,modoDeJuego,rondas,lim_rondas)
+
+					if victoriaO == 'seguir':
+						victorias_o += 1
+						rondas += 1
+						transicion = False
+						pass
+
+					elif victoriaO == 'finalizar':
+						victorias_o += 1
+						rondas += 1
+						return victorias_x,victorias_o,rondas
+					else:
+						Flag = True
+
+			elif victoriaO == 'finalizar':
+				victorias_o += 1
+				rondas += 1
+				return victorias_x,victorias_o,rondas
+			else:
+				Flag = True
+
+		if evaluarRondas(rondas,lim_rondas):
+			tablero.gato()
+			Flag = True
+		
+		if Flag and transicion:
+			tablero.crearTablero()
+
+juego = Juego()
+jugando = True
+
+while jugando:
+	juego.limpiarPantalla()
+	vicX,vicO,rounds = Game()
+	jugando = juego.endGame(vicX,vicO,rounds)
