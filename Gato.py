@@ -173,6 +173,9 @@ class IA(Tablero):
 		return False
 
 def continuar(eleccion):
+	while eleccion.lower() != 'si' and eleccion.lower() != 'sí' and eleccion.lower() != 'no':
+		print("\nOpción inválida, por favor intente de nuevo")
+		eleccion = input("Elija una opción (si/no): ")
 	if eleccion.lower() == 'si' or eleccion.lower() == 'sí':
 		return True
 	return False
@@ -183,11 +186,11 @@ def setPantalla(tablero,eleccion,jugador):
 	tablero.gato()
 	tablero.actualizarTablero(eleccion,jugador)
 
-def evaluarVictoriaX(tablero,modoDeJuego,rondas,lim_rondas):
+def evaluarVictoria(jugador,tablero,modoDeJuego,rondas,lim_rondas):
 	#determina si es que hay una victoria de X
-	if tablero.victoria('X'):
+	if tablero.victoria(jugador):
 		tablero.crearTablero()
-		print("\nFelicitaciones X, has ganado esta ronda!")
+		print("\nFelicitaciones " + jugador + ", has ganado esta ronda!")
 		if modoDeJuego == 1 or modoDeJuego == 2:
 			seguir = input("¿Te gustaría seguir jugando? (si/no): ")
 			if continuar(seguir):
@@ -212,7 +215,7 @@ def evaluarVictoriaX(tablero,modoDeJuego,rondas,lim_rondas):
 	else:
 		return False
 
-def evaluarEmpateX(tablero,modoDeJuego,rondas,lim_rondas):
+def evaluarEmpate(tablero,modoDeJuego,rondas,lim_rondas):
 	#determinar si es que hay un empate en la partida
 	if tablero.empate():
 		tablero.crearTablero()
@@ -269,64 +272,6 @@ def inicio_o(reinicio,tablero,flow,modoDeJuego,aiO,humanoO,Obot,ai):
 			o_eleccion = ia_move
 	
 	setPantalla(tablero,o_eleccion,'O')
-
-def evaluarEmpateO(tablero,modoDeJuego,rondas,lim_rondas):
-	#determinar si es que hay un empate en la partida
-	if tablero.empate():
-		tablero.crearTablero()
-		print("\nX y O han empatado!")
-		if modoDeJuego == 1 or modoDeJuego == 2:
-			seguir = input("¿Te gustaría seguir jugando? (si/no): ")
-			if continuar(seguir):
-				tablero.reiniciarTablero()
-				tablero.limpiarPantalla()
-				return 'seguir'
-			else:
-				return 'finalizar'
-		else:
-			print("Iniciando nueva ronda...")
-			time.sleep(2)
-			if evaluarRondas(rondas + 1,lim_rondas):
-				tablero.limpiarPantalla()
-				tablero.gato()
-				tablero.reiniciarTablero()
-				tablero.crearTablero()
-				return 'finalizar'
-			else:
-				tablero.reiniciarTablero()
-				tablero.limpiarPantalla()
-				return 'seguir'
-	else:
-		return 'activar Flag'
-
-def evaluarVictoriaO(tablero,modoDeJuego,rondas,lim_rondas):
-	#determina si es que hay una victoria de O
-	if tablero.victoria('O'):
-		tablero.crearTablero()
-		print("\nFelicitaciones O, has ganado esta ronda!")
-		if modoDeJuego == 1 or modoDeJuego == 2:
-			seguir = input("¿Te gustaría seguir jugando? (si/no): ")
-			if continuar(seguir):
-				tablero.reiniciarTablero()
-				tablero.limpiarPantalla()
-				return 'seguir'
-			else:
-				return 'finalizar'
-		else:
-			print("Iniciando nueva ronda...")
-			time.sleep(2)
-			if evaluarRondas(rondas + 1,lim_rondas):
-				tablero.limpiarPantalla()
-				tablero.gato()
-				tablero.reiniciarTablero()
-				tablero.crearTablero()
-				return 'finalizar'
-			else:
-				tablero.reiniciarTablero()
-				tablero.limpiarPantalla()
-				return 'seguir'
-	else:
-		return 'activar Flag'
 
 def menu():
 	print("\n\nBienvenido a gato!\n\n")
@@ -457,7 +402,7 @@ def Game():
 		
 		setPantalla(tablero,x_eleccion,'X')
 		
-		victoriaX = evaluarVictoriaX(tablero,modoDeJuego,rondas,lim_rondas)
+		victoriaX = evaluarVictoria('X',tablero,modoDeJuego,rondas,lim_rondas)
 		
 		#determinar si X ganó la ronda
 		if victoriaX == 'seguir':
@@ -474,7 +419,7 @@ def Game():
 			return victorias_x,victorias_o,rondas
 		
 		#determinar si es que hay un empate en la partida
-		empateX = evaluarEmpateX(tablero,modoDeJuego,rondas,lim_rondas)
+		empateX = evaluarEmpate(tablero,modoDeJuego,rondas,lim_rondas)
 
 		if empateX == 'seguir':
 			reinicio = True
@@ -501,7 +446,7 @@ def Game():
 			
 
 			#determinar si es que hay un empate en la partida
-			empateO = evaluarEmpateO(tablero,modoDeJuego,rondas,lim_rondas)
+			empateO = evaluarEmpate(tablero,modoDeJuego,rondas,lim_rondas)
 			
 			if empateO == 'seguir':
 				rondas += 1
@@ -517,7 +462,7 @@ def Game():
 
 
 			#determina si es que hay una victoria de O
-			victoriaO = evaluarVictoriaO(tablero,modoDeJuego,rondas,lim_rondas)
+			victoriaO = evaluarVictoria('O',tablero,modoDeJuego,rondas,lim_rondas)
 
 			if victoriaO == 'seguir':
 				victorias_o += 1
@@ -531,7 +476,7 @@ def Game():
 					flow = True
 					
 					#determinar si es que hay un empate en la partida
-					empateO = evaluarEmpateO(tablero,modoDeJuego,rondas,lim_rondas)
+					empateO = evaluarEmpate(tablero,modoDeJuego,rondas,lim_rondas)
 					
 					if empateO == 'seguir':
 						rondas += 1
@@ -546,7 +491,7 @@ def Game():
 						Flag = True
 
 					#determina si es que hay una victoria de O
-					victoriaO = evaluarVictoriaO(tablero,modoDeJuego,rondas,lim_rondas)
+					victoriaO = evaluarVictoria('O',tablero,modoDeJuego,rondas,lim_rondas)
 
 					if victoriaO == 'seguir':
 						victorias_o += 1
